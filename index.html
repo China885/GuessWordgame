@@ -351,6 +351,21 @@ window.addEventListener('resize',checkOrientation);
 checkOrientation();
 })();
 
+let lastTouchEnd = 0;
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault(); // ป้องกัน pinch zoom
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(event) {
+      let now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault(); // ป้องกัน double-tap zoom
+      }
+      lastTouchEnd = now;
+    }, false);
+
 const creditEl = document.getElementById('credit');
 
 function updateCreditVisibility() {
