@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>เกมทายคำสุดโหด</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Sriracha&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --accent:#ff8a2b;
+  --accent-2:#ffb37a;
+  --bg:#fffaf6;
+  --muted:#7a6b5a;
+  --ui-radius:24px;
+  --big-btn-size:185px; /* เพิ่มขนาดปุ่ม */
+  --font-family: "Sriracha", "Noto Sans Thai", sans-serif;
+}
+html,body{height:100%;margin:0;font-family:var(--font-family);background:linear-gradient(180deg,#fffaf6 0%, #fff 60%);}
+.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
+.panel{width:100%;max-width:960px;background:white;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,0.08);padding:18px;box-sizing:border-box;}
+h1{margin:6px 0 8px;color:var(--accent);font-size:28px;text-align:center}
+.subtitle{color:var(--muted);text-align:center;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:8px 0}
+label{font-size:14px;color:var(--muted);margin-right:6px}
+select,input[type=radio]{padding:10px;border-radius:12px;border:1px solid #eee;font-size:16px}
+.btn{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:white;padding:12px 18px;border-radius:14px;border:0;font-size:18px;cursor:pointer;box-shadow:0 6px 16px rgba(255,138,43,0.28);}
+
+#startBtn {
+  border-radius: 8px !important;
+  width: 180px;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 12px 18px;
+  position: relative;
+  z-index: 50; 
+}
+
+.side-btn {
+  position: absolute;
+  top: 0;                  /* ดันขึ้นไปติดขอบบน */
+  bottom: 0;               /* ยืดลงไปติดขอบล่าง */
+  transform: none;         /* เอาการ translateY ออก */
+  width: 120px;            /* ความกว้างปุ่ม */
+  height: 100%;            /* ยืดเต็มความสูงของ game-wrap */
+  border-radius: 0;        /* ไม่โค้ง มุมเหลี่ยม */
+  border: 0;
+  font-size: 22px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background .2s ease;
+  z-index: 40;
+}
+
+.side-btn.left {
+  left: 0;
+  background: linear-gradient(180deg,#ffcc80,#ffa726);
+}
+
+.side-btn.right {
+  right: 0;
+  background: linear-gradient(180deg,#66bb6a,#43a047);
+}
+
+/* label ให้ขึ้นตรงกลางแนวตั้งชิดขอบ */
+.side-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.side-label.left { left: 130px; text-align: left; }
+.side-label.right { right: 130px; text-align: right; }
+
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64%;max-width:760px;background:white;border-radius:20px;padding:28px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.06); z-index: 20;}
+
+.endscreen{display:none;padding:18px;text-align:center;color:var(--muted); z-index: 60;}
+
+/* -------------------------------- */
+
+.game-wrap{display:none;width:100%;max-width:1280px;height:640px;background:linear-gradient(180deg,#fff 0%, #fff4ea 100%);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.08);overflow:hidden;position:relative;}
+.topbar{position:absolute;left:0;right:0;top:12px;display:flex;justify-content:space-between;padding:0 24px;align-items:center;}
+.timer{background:rgba(255,138,43,0.06);border:1px solid rgba(255,138,43,0.12);padding:8px 14px;border-radius:999px;font-weight:700;color:var(--accent);display:inline-flex;gap:8px;align-items:center;font-size:18px;}
+.score{font-size:18px;color:var(--muted)}
+.prompt{font-size:44px;color:#333;margin:6px 0;word-break:break-word}
+.hint{color:var(--muted);font-size:14px;margin-top:8px}
+.queue{position:absolute;left:0;right:0;bottom:12px;padding:12px 20px;display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;overflow:auto;}
+.chip{background:linear-gradient(180deg,#fff, #fff7f0);padding:8px 12px;border-radius:12px;border:1px solid #ffe6cf;color:var(--muted);font-size:13px;white-space:nowrap}
+.side-btn.left{left:22px;background:linear-gradient(180deg,#ffcc80,#ffa726)}
+.side-btn.right{right:22px;background:linear-gradient(180deg,#66bb6a,#43a047)}
+.side-label{position:absolute;top:calc(50% + 72px);width:120px;left:22px;text-align:left;color:var(--muted);font-size:13px}
+.side-label.right{left:auto;right:22px;text-align:right}
+button.side-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+.rotate-overlay{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:linear-gradient(0deg, rgba(0,0,0,0.45), rgba(0,0,0,0.45));color:white;z-index:9999;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;}
+.rotate-overlay .card{background:rgba(255,255,255,0.06);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.08)}
+.rotate-overlay .hint{color:#ffe8d6}
+.small{font-size:13px;color:var(--muted)}
+@media (max-width:540px){.game-wrap{height:520px}.center{width:86%}.prompt{font-size:30px}:root{--big-btn-size:120px} 
+  /* ปรับขนาดปุ่มเริ่มบนหน้าจอเล็ก */
+  #startBtn { width: 160px; }
+  .side-btn { width: var(--big-btn-size); height: var(--big-btn-size); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div id="credit" style="
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:12px;
+  position:fixed;
+  left:0; right:0;
+  bottom:6px;
+  pointer-events:none;
+">
+  พระเจ้าผู้สร้างคือ "Limux"
+</div>
+
+<!-- START: selection panel -->
+<div class="panel" id="setupPanel">
+<h1>เกมทายคำโหดๆ</h1>
+<div class="subtitle">หมุนมือถือเป็นแนวนอนก่อนเล่น • เลือกหมวด แล้วกดเริ่ม</div>
+<div class="row">
+<label for="category">หมวด:</label>
+<select id="category">
+<option value="football">ฟุตบอล (แค่นักบอล)</option>
+<option value="celeb">ดาราดัง</option>
+<option value="yt">ยูทูบเปอร์</option>
+<option value="country">ประเทศ</option>
+<option value="science">วิชา: วิทยาศาสตร์</option>
+<option value="physics">วิชา: ฟิสิกส์</option>
+<option value="thai">วิชา: ภาษาไทย</option>
+</select>
+</div>
+<div class="row" id="gradeRow" style="display:none;">
+<label>ระดับชั้น (สำหรับหมวดวิชา):</label>
+<select id="grade">
+<option value="m1">ม.1</option>
+<option value="m2">ม.2</option>
+<option value="m3">ม.3</option>
+<option value="m4">ม.4</option>
+<option value="m5">ม.5</option>
+<option value="m6">ม.6</option>
+</select>
+</div>
+<div class="row">
+<label>เวลา:</label>
+<label><input type="radio" name="time" value="60" checked /> 60 วินาที</label>
+<label><input type="radio" name="time" value="120" /> 120 วินาที</label>
+<label><input type="radio" name="time" value="180" /> 180 วินาที</label>
+<label><input type="radio" name="time" value="300" /> 300 วินาที</label>
+</div>
+<div class="row" style="margin-top:14px;justify-content:center;">
+<button class="btn" id="startBtn">เริ่มเล่น</button>
+</div>
+<div style="margin-top:14px;color:var(--muted);font-size:13px;text-align:center">
+ข้อมูลคำ: กุไม่ได้หาจาก wiki แน่นอนฮ่า่ไ่ๆาๆา
+</div>
+</div>
+<!-- END selection panel -->
+
+<!-- START: gameplay panel -->
+<div class="game-wrap" id="gameWrap" aria-hidden="true">
+<div class="topbar">
+<div class="timer" id="timerDisplay">เวลา: <span id="timeLeft">0</span>s</div>
+<div class="score">คะแนน: <span id="scoreDisplay">0</span></div>
+</div>
+
+<!-- side buttons -->
+<button class="side-btn left" id="skipBtn" aria-label="ผ่าน">ผ่าน<br><small style="font-size:16px">ไม่รู้</small></button>
+<div class="side-label">กด <strong>ผ่าน</strong> ถ้าตอบไม่ได้</div>
+<button class="side-btn right" id="okBtn" aria-label="ถูก">ถูก<br><small style="font-size:16px">ได้คะแนน</small></button>
+<div class="side-label right">กด <strong>ถูก</strong> ถ้าตอบถูก</div>
+
+<div class="center" id="centerCard">
+<div style="font-size:12px;color:var(--muted)">เดี๋ยวคำจะขึ้นตรงกลาง ให้เพื่อนทาย — คำถัดไปจะขึ้นด้านล่าง</div>
+<div class="prompt" id="promptText">...</div>
+<div class="hint" id="promptHint">หมวด: -</div>
+</div>
+<div class="queue" id="queue"></div>
+
+<div class="endscreen" id="endScreen" style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,255,255,0.9);">
+<div class="card">
+<h2 style="color:var(--accent);margin:6px 0 2px">หมดเวลา</h2>
+<div style="font-size:20px;font-weight:700;margin-bottom:8px">คะแนนของคุณ: <span id="finalScore">0</span></div>
+<div class="small" style="margin-bottom:12px">กดเล่นอีกครั้งหรือกลับไปเลือกหมวด</div>
+<div style="display:flex;gap:10px;justify-content:center">
+<button class="btn" id="replayBtn">เล่นอีกครั้ง</button>
+<button class="btn" id="backBtn" style="background:#eee;color:var(--accent)">กลับไปเลือก</button>
+</div>
+</div>
+</div>
+</div>
+<!-- END gameplay panel -->
+
+</div>
+<div class="rotate-overlay" id="rotateOverlay">
+<div class="card">
+<div style="font-size:40px">🐱</div>
+<h3 style="margin:8px 0;color:white">กรุณาหมุนเครื่องเป็นแนวนอนด้วยครับไอเหี้ย</h3>
+<div class="hint">เกมนี้บังคับเล่นแนวนอนเพื่อให้เล่นแบบไม่มีปัญหา</div>
+</div>
+</div>
+
+<script>
+(function(){
+let SAMPLE={};
+fetch("word.json")
+  .then(res=>res.json())
+  .then(json=>{ SAMPLE=json; console.log("โหลดคำเสร็จ:",SAMPLE); })
+  .catch(err=>console.error("โหลด word.json ไม่ได้:",err));
+
+const categoryEl=document.getElementById('category');
+const gradeRow=document.getElementById('gradeRow');
+const gradeEl=document.getElementById('grade');
+const startBtn=document.getElementById('startBtn');
+const setupPanel=document.getElementById('setupPanel');
+const gameWrap=document.getElementById('gameWrap');
+const timerDisplay=document.getElementById('timeLeft');
+const scoreDisplay=document.getElementById('scoreDisplay');
+const promptText=document.getElementById('promptText');
+const promptHint=document.getElementById('promptHint');
+const queueEl=document.getElementById('queue');
+const skipBtn=document.getElementById('skipBtn');
+const okBtn=document.getElementById('okBtn');
+const endScreen=document.getElementById('endScreen');
+const finalScore=document.getElementById('finalScore');
+const replayBtn=document.getElementById('replayBtn');
+const backBtn=document.getElementById('backBtn');
+let words=[],index=0,score=0,timer=null,remaining=0;
+
+function onCategoryChange(){
+  const v=categoryEl.value;
+  gradeRow.style.display=(v==='science'||v==='physics'||v==='thai')?'flex':'none';
+}
+categoryEl.addEventListener('change',onCategoryChange);
+onCategoryChange();
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
+
+function loadWords(category,grade){
+  let list=[];
+  if(category==='science'||category==='physics'||category==='thai'){
+    const key=grade;
+    const source=SAMPLE[category];
+    if(source && source[key]) list=source[key].slice();
+  }else{list=(SAMPLE[category]||[]).slice();}
+  return shuffle(list);
+}
+
+function renderQueue(){
+  queueEl.innerHTML='';
+  for(let i=index+1;i<Math.min(words.length,index+8);i++){
+    const chip=document.createElement('div');
+    chip.className='chip';
+    chip.textContent=words[i];
+    queueEl.appendChild(chip);
+  }
+}
+
+function showCurrent(){
+  promptText.textContent=words[index]||'—';
+  promptHint.textContent=`คำที่ ${index+1} / ${words.length}`;
+  renderQueue();
+}
+
+function nextWord(){index++;if(index>=words.length){words=shuffle(words);index=0;}showCurrent();}
+function onCorrect(){score++;scoreDisplay.textContent=score;nextWord();}
+function onSkip(){nextWord();}
+
+function startTimer(seconds){
+  remaining=seconds;
+  timerDisplay.textContent=remaining;
+  timer=setInterval(()=>{
+    remaining--;
+    timerDisplay.textContent=remaining;
+    if(remaining<=0){clearInterval(timer);endGame();}
+  },1000);
+}
+
+function endGame(){
+  finalScore.textContent=score;
+  endScreen.style.display='flex';
+}
+
+startBtn.addEventListener('click',()=>{
+  const cat=categoryEl.value;
+  const grade=gradeEl.value;
+  const time=Number(document.querySelector('input[name=time]:checked').value);
+  words=loadWords(cat,grade);
+  setupPanel.style.display='none';
+  gameWrap.style.display='block';
+  gameWrap.setAttribute('aria-hidden','false');
+  index=0;score=0;
+  scoreDisplay.textContent='0';
+  endScreen.style.display='none';
+  showCurrent();
+  promptHint.textContent=`หมวด: ${categoryEl.options[categoryEl.selectedIndex].text}`;
+  startTimer(time);
+  window.focus();
+
+  // update credit visibility when game starts
+  updateCreditVisibility();
+});
+
+okBtn.addEventListener('click',onCorrect);
+skipBtn.addEventListener('click',onSkip);
+window.addEventListener('keydown',e=>{
+  if(gameWrap.style.display!=='block')return;
+  if(e.code==='ArrowLeft'){onSkip();e.preventDefault();}
+  if(e.code==='ArrowRight'||e.code==='Space'){onCorrect();e.preventDefault();}
+});
+
+replayBtn.addEventListener('click',()=>{
+  endScreen.style.display='none';
+  score=0;index=0;
+  scoreDisplay.textContent='0';
+  showCurrent();
+  const time=Number(document.querySelector('input[name=time]:checked').value);
+  if(timer) clearInterval(timer);
+  startTimer(time);
+
+  // update credit visibility when replay
+  updateCreditVisibility();
+});
+
+backBtn.addEventListener('click',()=>{
+  if(timer) clearInterval(timer);
+  gameWrap.style.display='none';
+  setupPanel.style.display='block';
+
+  // update credit visibility when go back
+  updateCreditVisibility();
+});
+
+const rotateOverlay=document.getElementById('rotateOverlay');
+function checkOrientation(){rotateOverlay.style.display=(window.innerHeight>window.innerWidth)?'flex':'none';}
+window.addEventListener('resize',checkOrientation);
+checkOrientation();
+})();
+
+const creditEl = document.getElementById('credit');
+
+function updateCreditVisibility() {
+  if (document.getElementById('gameWrap').style.display === 'block') {
+    creditEl.style.display = 'none'; // ซ่อนตอนเล่นเกม
+  } else {
+    creditEl.style.display = 'block'; // แสดงตอนหน้า setup หรือ end screen
+  }
+}
+
+// เรียกเมื่อโหลดครั้งแรกเพื่อให้สถานะถูกต้อง
+updateCreditVisibility();
+</script>
+</body>
+</html>
